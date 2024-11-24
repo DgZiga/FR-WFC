@@ -1,0 +1,14 @@
+*built_graphics*
+*.gba
+*.sav
+*.bak
+*.sgm
+*.zip
+build/*
+*.nam
+*.til
+*.id0
+*.id1
+*.json
+*.toml
+*.rar

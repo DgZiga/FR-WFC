@@ -1,0 +1,110 @@
+a 082DD100 c'è la tilemap di pallet, bisogna capire chi la legga
+
+
+Breakpoint (on read) address 082dd100 value:041c
+R00=082dd100 R04=0203202c R08=00000018 R12=00000001
+R01=0203202c R05=00000014 R09=0000004e R13=03007dc8
+R02=00000018 R06=00000030 R10=00000000 R14=08058aaf
+R03=020255a8 R07=082dd100 R11=00000000 R15=081e3b68
+CPSR=0000003f (......T Mode: 1f)
+081e3b64  df0b swi $0b
+> 081e3b66  4770 bx lr
+081e3b68  df06 swi $06
+
+only time it's read.
+Full func is:
+ROM:08058A70 map_copy_with_padding:                  @ CODE XREF: mapheader_copy_mapdata_with_padding+44↑p
+ROM:08058A70 dst = R4
+ROM:08058A70 height = R5
+ROM:08058A70 srcStride = R6
+ROM:08058A70 src = R7
+ROM:08058A70 width = R8
+ROM:08058A70 dstStride = R9
+
+bt on that on pallet town gives:
+
+R00=082dd100 R04=02031dfc R08=00030401 R12=00000001
+R01=00000018 R05=082dd4c0 R09=00000000 R13=03007de4
+R02=00000014 R06=02036dfc R10=00000000 R14=08058a49
+R03=02025578 R07=030030f0 R11=00000000 R15=08058a72
+CPSR=8000003f (N.....T Mode: 1f)
+08058a46  f814 blh $0028
+> 08058a70  b5f0 push {r4-r7,lr}
+08058a72  464f mov r7, r9
+
+r0=src (pallet town tilemap)
+r1=cpuset mode?????
+r2=????
+
+
+se io qua mi metto ed edito r0 cambio edito la tilemap
+ogni entry della tilemap sembra contenere sia la parte grafica che i movimenti permessi
+first byte seems to be graphics tile id. Tile is indexed the same as in AMAP (more research needed)
+
+
+
+
+----
+ferma tutto, a 0x082DD4C0 c'è una struct che tra le altre cose contiene 082dd100.
+
+Breakpoint (on read) address 082dd4c0 value:00000018
+R00=03007de4 R04=02031dfc R08=00030401 R12=00000001
+R01=00000018 R05=082dd4c0 R09=00000000 R13=03007de4
+R02=03005040 R06=02036dfc R10=00000000 R14=08058a19
+R03=02025598 R07=030030f0 R11=00000000 R15=08058a20
+CPSR=0000003f (......T Mode: 1f)
+08058a1c  6829 ldr r1, [r5, #0x0]
+> 08058a1e  310f add r1, #0xf
+08058a20  6011 str r1, [r2, #0x0]
+
+Siamo dentro a CpuFastSet chiamato da 08058A00 (mapheader_copy_mapdata_with_padding(struct mapheader *header))
+
+Breakpoint (on read) address 082dd4c0 value:0018
+R00=082dd100 R04=02031dfc R08=00030401 R12=00000001
+R01=00000018 R05=082dd4c0 R09=00000000 R13=03007de4
+R02=03005040 R06=02036dfc R10=00000000 R14=08058a19
+R03=02025598 R07=030030f0 R11=00000000 R15=08058a44
+CPSR=8000003f (N.....T Mode: 1f)
+08058a40  8829 ldrh r1, [r5, #0x0]
+> 08058a42  88aa ldrh r2, [r5, #0x4]
+08058a44  f000 bl $08058a70
+
+Siamo sempre dentro a 08058A00 (mapheader_copy_mapdata_with_padding(struct mapheader *header))
+
+struct caricato (0x082DD4C0 per pallet) contiene:
+
+struct MapHeader {
+    u32 width;
+    u32 height;
+    u16[] borderblock;
+    u16[] blockmap;   //0x082dd100 for pallet
+    struct Blockdata block1data;
+    struct Blockdata block2data;
+    u8 padWidth;
+    u8 padHeight;
+    u16 filler;
+}
+
+struct Blockdata{
+    bool isCompressed;
+    bool isSecondary;
+    u16 padding;
+    lzCompressedData* tileset;
+    u16[] uncompressedPal; //16 entries
+    void *blockset; //????? 29F6C8 for pallet
+    void *animation; //????? 070155 for pallet
+    void *attributes; //????? 2A1EC8 for pallet
+}
+
+
+//trying to understand what blockset is
+
+Breakpoint (on read) address 0829f6c8 value:0000
+R00=02000824 R04=0829f6c8 R08=00000002 R12=00000010
+R01=00000000 R05=0829f6c8 R09=00000007 R13=03007dbc
+R02=00003014 R06=00000007 R10=00000006 R14=0805a9a7
+R03=00000004 R07=00000007 R11=00000000 R15=0805aa90
+CPSR=0000003f (......T Mode: 1f)
+0805aa8c  8821 ldrh r1, [r4, #0x0]
+> 0805aa8e  8001 strh r1, [r0, #0x0]
+0805aa90  8861 ldrh r1, [r4, #0x2]
