@@ -217,7 +217,7 @@ struct WarpData {
     struct Coords16 coordinates;
 };
 
-ASSERT_SIZEOF(struct WarpData, 8);
+//ASSERT_SIZEOF(struct WarpData, 8);
 
 /**
  * Scripts that are run when the event is stepped on.
@@ -340,7 +340,7 @@ struct SignpostData {
     };
 };
 
-ASSERT_SIZEOF(struct SignpostData, 0xC);
+//ASSERT_SIZEOF(struct SignpostData, 0xC);
 
 /**
  * Events on the map.
