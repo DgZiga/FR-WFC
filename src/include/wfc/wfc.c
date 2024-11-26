@@ -5,22 +5,23 @@
 #include "wfc.h"
 
 u32 get_probs(struct Wfc wfc, u8 x, u8 y){
-    return ((u32 *)wfc.probs[x])[y];
+    //dprintf("x %x y %x res %x\n", x, y, wfc.probs[x + y * wfc.width]);
+    return wfc.probs[x + y * wfc.width];
 }
 struct MapTile get_output(struct Wfc wfc, u8 x, u8 y){
-    return ((struct MapTile *)wfc.output[x])[y];
+    return wfc.output[x + y * wfc.width];
 }
 bool get_prob_calc_ctr(struct Wfc wfc, u8 x, u8 y){
-    return ((bool *)wfc.output[x])[y];
+    return wfc.prob_calc_ctr[x + y * wfc.width];
 }
 void set_prob_calc_ctr(struct Wfc wfc, u8 x, u8 y, bool val){
-    ((bool *)wfc.output[x])[y] = val;
+    wfc.prob_calc_ctr[x + y * wfc.width] = val;
 }
-void set_output(struct Wfc wfc, u8 x, u8 y, struct MapTile out){
-    ((struct MapTile *)wfc.output[x])[y] = out;
+void set_output(struct Wfc wfc, u8 x, u8 y, struct MapTile val){
+    wfc.output[x + y * wfc.width] = val;
 }
-void set_probs(struct Wfc wfc, u8 x, u8 y, u32 probs){
-    ((u32 *)wfc.probs[x])[y] = probs;
+void set_probs(struct Wfc wfc, u8 x, u8 y, u32 val){
+    wfc.probs[x + y * wfc.width] = val;
 }
 
 const struct MapTile EMPTY_OUTPUT = {.tile=1023, .permission=63};//equal to 0xFFFF
@@ -29,29 +30,28 @@ bool is_output_empty(struct MapTile output){
 }
 
 
-void init(struct Wfc wfc){
+struct Wfc init(u8 width, u8 height){
     //alloc output, probs, prob_calc_ctr.
-    u32 outputSize = sizeof(struct MapTile)*wfc.width*wfc.height;
-    u32 probsSize = sizeof(u32)*wfc.width*wfc.height;
-    u32 probsCalcCtrSize = sizeof(bool)*wfc.width*wfc.height;
+    u32 outputSize = sizeof(struct MapTile)*width*height;
+    u32 probsSize = sizeof(u32)*width*height;
+    u32 probsCalcCtrSize = sizeof(bool)*width*height;
     u8 *wfcDataPtr = malloc(outputSize + probsSize + probsCalcCtrSize);
     void *wfcOuputPtr = wfcDataPtr;
-    void *wfcProbsPtr = wfcDataPtr+outputSize;
+    u32 *wfcProbsPtr = (u32 *) ((u8 *)wfcDataPtr+outputSize);
     void *wfcProbsCalcCtrPtr = ((u8 *)wfcProbsPtr)+probsSize;
-    wfc.addr = wfcDataPtr;
-    wfc.output = wfcOuputPtr;
-    wfc.probs = wfcProbsPtr;
-    wfc.prob_calc_ctr = wfcProbsPtr;
 
-    dprintf("asd %x %x %x", wfcOuputPtr, wfcProbsPtr, tileset_allow_all_tiles);
+    dprintf("asd %x\n", wfcOuputPtr);
 
     memset(wfcOuputPtr, 0xFF, outputSize);
-    for(u8 i=0; i<wfc.width; i++){
-        for(u8 j=0; j<wfc.height; j++){
-            *((u32 *)wfcProbsPtr) =tileset_allow_all_tiles;
+    for(u8 i=0; i<width; i++){
+        for(u8 j=0; j<height; j++){
+            wfcProbsPtr[i + j * width]=tileset_allow_all_tiles;
         }
     }
     memset(wfcProbsCalcCtrPtr, 0, probsCalcCtrSize);
+
+    struct Wfc wfc = {.addr=wfcDataPtr, .height=height, .width=width, .output=wfcOuputPtr, .probs=wfcProbsPtr, .prob_calc_ctr=wfcProbsCalcCtrPtr};
+    return wfc;
 }
 
 struct Coords8 find_lowest_entropy_cell(struct Wfc wfc){
@@ -61,7 +61,7 @@ struct Coords8 find_lowest_entropy_cell(struct Wfc wfc){
     for(u8 i=0; i<wfc.width; i++){
         for(u8 j=0; j<wfc.height; j++){
             u8 bitsNo=count_bits(get_probs(wfc, i, j));
-            dprintf("comparing i:%x, j:%x, prob:%x, bitsNo: %x, lowestCnt: %x\n", i, j, get_probs(wfc, i, j), bitsNo, lowestCnt);
+            //dprintf("comparing i:%x, j:%x, prob:%x, bitsNo: %x, lowestCnt: %x\n", i, j, get_probs(wfc, i, j), bitsNo, lowestCnt);
             if(is_output_empty(get_output(wfc, i, j)) && bitsNo<lowestCnt){
                 lowestCnt = bitsNo;
                 lowestI = i;
@@ -74,7 +74,7 @@ struct Coords8 find_lowest_entropy_cell(struct Wfc wfc){
 }
 
 void recalc_prob(struct Wfc wfc, u8 x, u8 y){
-    if(x<0 || y<0 || x==wfc.width || y==wfc.height || get_prob_calc_ctr(wfc, x, y)){
+    if(x<0 || y<0 || x>=wfc.width || y>=wfc.height || get_prob_calc_ctr(wfc, x, y)){
         return;
     }
     set_prob_calc_ctr(wfc, x, y, true);
@@ -134,18 +134,18 @@ void start_recalc_prob(struct Wfc wfc, u8 x, u8 y){
 
 //returns 0 if succesful, 1 otherwise
 u8 observe(struct Wfc wfc, u8 x, u8 y){
-        u32 probs = get_probs(wfc, x, y);
-        if(probs == 0){
-            return 1;
-        }
-        u16 rands = (u16)((u32)rand() * (u32)count_bits(probs) / (u32) 0xFFFF);
-        u8 tileId = get_nth_set_bit(probs, rands);
-        set_output(wfc, x, y, tileId_to_mapTile[tileId]);
-        set_probs(wfc, x, y, 1 << tileId);
+    u32 probs = get_probs(wfc, x, y);
+    if(probs == 0){
+        return 1;
+    }
+    u16 rands = (u16)((u32)rand() * (u32)count_bits(probs) / (u32) 0xFFFF);
+    u8 tileId = get_nth_set_bit(probs, rands);
+    set_output(wfc, x, y, tileId_to_mapTile[tileId]);
+    set_probs(wfc, x, y, 1 << tileId);
 
-        //propagate changes to nearby nodes
-        start_recalc_prob(wfc, x, y);
-        return 0;
+    //propagate changes to nearby nodes
+    start_recalc_prob(wfc, x, y);
+    return 0;
 }
 
 void observe_forced(struct Wfc wfc, u8 x, u8 y, u8 forcedVal){
@@ -162,7 +162,13 @@ void observe_forced(struct Wfc wfc, u8 x, u8 y, u8 forcedVal){
     start_recalc_prob(wfc, x, y);
 }
 
-void print(struct Wfc wfc);
+void print(struct Wfc wfc){
+    for(u8 i=0; i<wfc.width; i++){
+        for(u8 j=0; j<wfc.height; j++){
+            dprintf("%x  ", get_output(wfc, i, j));
+        }
+    }
+}
 //returns 0 if succesful, 1 otherwise
 u8 start(struct Wfc wfc){
     struct Coords8 coords = find_lowest_entropy_cell(wfc);
@@ -184,12 +190,5 @@ u8 start(struct Wfc wfc){
     return 0;
 }
 
-void print(struct Wfc wfc){
-    for(u8 i=0; i<wfc.width; i++){
-        for(u8 j=0; j<wfc.height; j++){
-            dprintf("%x  ", get_output(wfc, i, j));
-        }
-    }
-}
 
 #endif

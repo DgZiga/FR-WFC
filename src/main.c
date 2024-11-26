@@ -6,8 +6,7 @@
 
 void wfc_entrypoint(struct MapHeader *mapHeader){
 
-    struct Wfc wfc = {.height=10, .width=10};
-    init(wfc);
+    struct Wfc wfc = init(10, 10);
     u8 res = start(wfc);
     dprintf("wfcs res: %x", res);
 
