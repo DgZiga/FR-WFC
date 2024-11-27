@@ -5,25 +5,22 @@
 #include "main.h"
 
 void wfc_entrypoint(struct MapHeader *mapHeader){
-
-    struct Wfc wfc = init(10, 10);
+    
+    struct Wfc wfc = init(5, 5);
     u8 res = start(wfc);
-    dprintf("wfcs res: %x", res);
+    dprintf("wfcs res: %x\n", res);
 
     //Copy mapdata and mapTile into RAM to edit them
     struct MapData *mapData = mapHeader->data;
     memcpy((void *)RAM_FREESPACE, mapData, sizeof(struct MapData));
-    struct MapTile *data = (struct MapTile *) (RAM_FREESPACE + sizeof(struct MapData) + 0x10);
-    memcpy((void *)data, mapData->data, mapData->width * mapData->height * 2);
-
+    dprintf("og w h %x, %x\n", mapData->width, mapData->height);
     mapData = (struct MapData *)RAM_FREESPACE; 
-    if(mapData->width == 24){
-        data[0].tile=0xE;
-    }   
+    mapData->width = wfc.width;
+    mapData->height = wfc.height;
 
+    dprintf("done. setting %x to %x and %x to %x\n", mapData->data, wfc.output, mapHeader->data, mapData);
     mapData->data = (struct MapTile *) wfc.output;
     mapHeader->data = mapData;
-    
     //free(wfc.addr);
 }
 

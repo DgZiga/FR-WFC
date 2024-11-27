@@ -29,10 +29,10 @@ struct MapTile tileId_to_mapTile[] = {
     {.tile=13, .permission=0},
     {.tile=14, .permission=0},
     {.tile=28, .permission=0},
-    {.tile=28, .permission=0},
+    {.tile=36, .permission=0},
     {.tile=15, .permission=0},
     {.tile=29, .permission=0},
-    {.tile=29, .permission=0},
+    {.tile=37, .permission=0},
     {.tile=20, .permission=0},
     {.tile=21, .permission=0},
 };

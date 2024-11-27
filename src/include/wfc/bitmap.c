@@ -15,8 +15,8 @@ u8 count_bits(u32 in){
     return res;
 }
 
-u8 get_nth_set_bit(u32 bitmap, u16 pos){
-    u8 i=0;
+u32 get_nth_set_bit(u32 bitmap, u16 pos){
+    u32 i=0;
     while (bitmap != 0){
         if ((bitmap & 1) == 1){
             if(pos == 0){
