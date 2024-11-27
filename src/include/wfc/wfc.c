@@ -205,7 +205,7 @@ u8 start(struct Wfc wfc){
     struct Coords8 coords = find_lowest_entropy_cell(wfc);
     u8 x = coords.x;
     u8 y = coords.y;
-    print(wfc);
+    //print(wfc);
     do{
         //dprintf("\n\n\n");
         u8 failed = observe(wfc, x, y);
