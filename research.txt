@@ -108,3 +108,11 @@ CPSR=0000003f (......T Mode: 1f)
 0805aa8c  8821 ldrh r1, [r4, #0x0]
 > 0805aa8e  8001 strh r1, [r0, #0x0]
 0805aa90  8861 ldrh r1, [r4, #0x2]
+
+
+
+
+15s for 20x20 (pad 15). 1s sped up
+5s for 15x15 (pad 10), <1s sped up
+5s for 15x25 (pad 8), <1s sped up
+1s for 10x10 (pad 5), unnoticeable sped up

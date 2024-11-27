@@ -86,13 +86,13 @@ struct Position {
 
 void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
     // Stack for positions to process
-    struct Position *stack = (struct Position *)malloc((wfc.width+2) * (wfc.height+2) * sizeof(struct Position));
+    u8 pad = 10;
+    struct Position *stack = (struct Position *)malloc((wfc.width+pad) * (wfc.height+pad) * sizeof(struct Position));
     if (!stack) {
         // Memory allocation failed
         dprintf("porcodio la madonna è negra");
         return;
     }
-    dprintf("stack allocaed succesfully %x (%x bytes)\ntop: ", stack, wfc.width * wfc.height * sizeof(struct Position));
     int top = -1; // Stack pointer
 
     // Push the starting position onto the stack
@@ -116,7 +116,6 @@ void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
         if (x >= wfc.width || y >= wfc.height || get_prob_calc_ctr(wfc, x, y)) {
             continue;
         }
-        dprintf(" calcing %x %x (e: %x) ",x,y,is_output_empty(get_output(wfc, x, y)));
         set_prob_calc_ctr(wfc, x, y, true);
 
         if (!is_output_empty(get_output(wfc, x, y))) {
@@ -140,9 +139,7 @@ void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
         u32 d_allowed_tiles = d == 0 ? tileset_allow_all_tiles : sum_up_rules_for_tileids(d);
 
         u32 probs = get_probs(wfc, x, y);
-        dprintf("containing probs %x to %x %x %x %x", probs, l, r, u, d);
         probs &= l_allowed_tiles & r_allowed_tiles & u_allowed_tiles & d_allowed_tiles;
-        dprintf("= %x. ", probs);
 
         if (probs == 0) {
             dprintf("Se sei felice tu lo vuoi batti le mali %x %x ", x, y);
@@ -151,22 +148,15 @@ void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
         }
 
         set_probs(wfc, x, y, probs);
-        dprintf("set probs. %x %x ", count_bits(probs), count_bits(tileset_allow_all_tiles));
 
         if (count_bits(probs) != count_bits(tileset_allow_all_tiles)) {
             // Add neighboring positions to the stack
             if (x > 0)           stack[++top] = (struct Position){x - 1, y};
-            dprintf("a:%x ", top);
             if (x < wfc.width-1) stack[++top] = (struct Position){x + 1, y};
-            dprintf("b:%x ", top);
             if (y > 0)           stack[++top] = (struct Position){x, y - 1};
-            dprintf("c:%x ", top);
             if (y < wfc.height-1)stack[++top] = (struct Position){x, y + 1};
-            dprintf("d:%x  ", top);
         }
-        dprintf("newTop: %x\n", top);
     }
-    dprintf("\n");
 
     // Free allocated stack memory
     free(stack);
@@ -239,14 +229,11 @@ u8 observe(struct Wfc wfc, u8 x, u8 y){
     }
     u16 rands = (u16)((u32)rand() * (u32)count_bits(probs) / (u32) 0xFFFF);
     u8 tileId = get_nth_set_bit(probs, rands);
-    dprintf("collpasing %x,%x to tileId %x (rand: %x, prob: %x)\n", x, y, tileId, rands, probs);
     set_output(wfc, x, y, tileId_to_mapTile[tileId]);
     set_probs(wfc, x, y, 1 << tileId);
-    dprintf("collapsed\n");
 
     //propagate changes to nearby nodes
     recalc_prob_iterative(wfc, x, y);
-    dprintf("propagated\n");
     return 0;
 }
 
@@ -281,7 +268,6 @@ u8 start(struct Wfc wfc){
         //print(wfc);
         //dprintf("\n\n\n");
         u8 failed = observe(wfc, x, y);
-        dprintf("failed: %x\n", failed);
         if(failed == 1){
             return 1;
         }
