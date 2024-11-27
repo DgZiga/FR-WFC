@@ -3,7 +3,7 @@
 #define BITMAP_H
 
 #include <pokeagb/pokeagb.h>
-#include "../agb_debug/debug.c"
+#include "../agb_debug/debug.h"
 
 u8 count_bits(u32 in);
 

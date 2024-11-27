@@ -3,6 +3,8 @@
 #define BRUSH_H
 
 #include <pokeagb/pokeagb.h>
+#include "../agb_debug/debug.h"
+#include "../wfc/wfc.h"
 
 struct Brush{
     u32 superposition;
@@ -10,6 +12,6 @@ struct Brush{
     u8 softness;
 };
 
-void paint(struct Brush brush, u32 *matrix, u8 x, u8 y);
+void paint(struct Brush brush, struct Wfc wfc, u8 x, u8 y);
 
 #endif

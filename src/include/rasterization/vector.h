@@ -11,6 +11,6 @@ struct Vector{
     u8 toY;
 };
 
-void rasterizeVector(struct Vector v, u32 *matrix, struct Brush brush);
+void rasterizeVector(struct Vector v, struct Wfc wfc, struct Brush brush);
 
 #endif

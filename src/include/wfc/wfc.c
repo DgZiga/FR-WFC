@@ -28,6 +28,15 @@ bool is_output_empty(struct MapTile output){
     return output.permission == EMPTY_OUTPUT.permission && output.tile == EMPTY_OUTPUT.tile;
 }
 
+void print(struct Wfc wfc){
+    for(u8 i=0; i<wfc.width; i++){
+        for(u8 j=0; j<wfc.height; j++){
+            dprintf("%x  ", get_probs(wfc, j, i));
+        }
+        dprintf("\n");
+    }
+}
+
 
 struct Wfc init(u8 width, u8 height){
     //alloc output, probs, prob_calc_ctr.
@@ -49,8 +58,7 @@ struct Wfc init(u8 width, u8 height){
     memset(wfcOuputPtr, 0xFF, outputSize);
     for(u8 i=0; i<width; i++){
         for(u8 j=0; j<height; j++){
-            u32 * ptr = wfcProbsPtr + (j + i * width);
-            *ptr = tileset_allow_all_tiles;
+            wfcProbsPtr[j + i * width] = tileset_non_walkable_superpos;
         }
     }
     memset(wfcProbsCalcCtrPtr, 0, probsCalcCtrSize);
@@ -142,7 +150,8 @@ void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
         probs &= l_allowed_tiles & r_allowed_tiles & u_allowed_tiles & d_allowed_tiles;
 
         if (probs == 0) {
-            dprintf("Se sei felice tu lo vuoi batti le mali %x %x ", x, y);
+            dprintf("Se sei felice tu lo vuoi batti le mali %x %x \n", x, y);
+            print(wfc);
             // Handle collision
             // e.g., debug or log the error
         }
@@ -160,65 +169,6 @@ void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
 
     // Free allocated stack memory
     free(stack);
-}
-
-void recalc_prob(struct Wfc wfc, u8 x, u8 y){
-    if(x<0 || y<0 || x>=wfc.width || y>=wfc.height || get_prob_calc_ctr(wfc, x, y)){
-        return;
-    }
-    set_prob_calc_ctr(wfc, x, y, true);
-    if(!is_output_empty(get_output(wfc, x, y))){
-        recalc_prob(wfc, x-1, y  );
-        recalc_prob(wfc, x+1, y  );
-        recalc_prob(wfc, x  , y-1);
-        recalc_prob(wfc, x  , y+1);
-        return;
-    }
-    u32 l = 0;
-    u32 r = 0;
-    u32 u = 0;
-    u32 d = 0;
-    if(x>0)           {l=get_probs(wfc, x-1, y  );}
-    if(x<wfc.width-1) {r=get_probs(wfc, x+1, y  );}
-    if(y>0)           {u=get_probs(wfc, x  , y-1);}
-    if(y<wfc.height-1){d=get_probs(wfc, x  , y+1);}
-
-    u32 l_allowed_tiles = l == 0 ? tileset_allow_all_tiles : sum_left_rules_for_tileids(l);
-    u32 r_allowed_tiles = r == 0 ? tileset_allow_all_tiles : sum_right_rules_for_tileids(r);
-    u32 u_allowed_tiles = u == 0 ? tileset_allow_all_tiles : sum_up_rules_for_tileids(u);
-    u32 d_allowed_tiles = d == 0 ? tileset_allow_all_tiles : sum_down_rules_for_tileids(d);
-
-    u32 probs = get_probs(wfc, x, y);
-    probs = probs & l_allowed_tiles;
-    probs = probs & r_allowed_tiles;
-    probs = probs & u_allowed_tiles;
-    probs = probs & d_allowed_tiles;
-    
-    
-    if(probs == 0){
-        //debugger;
-        //throw new Error('Collision! Tile '+x+', '+y+' has 0 possibilities (was '+this.output_probs[x][y]+'n)');
-    }
-    set_probs(wfc, x, y, probs);
-
-    if(count_bits(probs) != count_bits(tileset_allow_all_tiles)){
-        recalc_prob(wfc, x-1, y  );
-        recalc_prob(wfc, x+1, y  );
-        recalc_prob(wfc, x  , y-1);
-        recalc_prob(wfc, x  , y+1);
-    }
-}   
-
-void start_recalc_prob(struct Wfc wfc, u8 x, u8 y){
-    //propagate changes to nearby nodes
-    recalc_prob(wfc, x, y);
-
-    //reset prob_calced_ctr
-    for(u8 i=0; i<wfc.width; i++){
-        for(u8 j=0; j<wfc.height; j++){
-            set_prob_calc_ctr(wfc, i, j, false);
-        }
-    }
 }
 
 //returns 0 if succesful, 1 otherwise
@@ -248,24 +198,15 @@ void observe_forced(struct Wfc wfc, u8 x, u8 y, u8 forcedVal){
     set_probs(wfc, x, y, 1 << tileId);
 
     //propagate changes to nearby nodes
-    start_recalc_prob(wfc, x, y);
-}
-
-void print(struct Wfc wfc){
-    for(u8 i=0; i<wfc.width; i++){
-        for(u8 j=0; j<wfc.height; j++){
-            dprintf("%x  ", get_probs(wfc, j, i));
-        }
-        dprintf("\n");
-    }
+    recalc_prob_iterative(wfc, x, y);
 }
 //returns 0 if succesful, 1 otherwise
 u8 start(struct Wfc wfc){
     struct Coords8 coords = find_lowest_entropy_cell(wfc);
     u8 x = coords.x;
     u8 y = coords.y;
+    print(wfc);
     do{
-        //print(wfc);
         //dprintf("\n\n\n");
         u8 failed = observe(wfc, x, y);
         if(failed == 1){

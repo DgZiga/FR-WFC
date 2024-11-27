@@ -25,31 +25,34 @@ struct TileRule tileset[] = {
 };
 
 struct MapTile tileId_to_mapTile[] = {
-   // /* 00 */{.tile=1, .permission=0},
-   // /* 01 */{.tile=13, .permission=0},
-   // /* 02 */{.tile=14, .permission=0},
-   // /* 03 */{.tile=28, .permission=1},
-   // /* 04 */{.tile=36, .permission=1},
-   // /* 05 */{.tile=15, .permission=0},
-   // /* 06 */{.tile=29, .permission=1},
-   // /* 07 */{.tile=37, .permission=1},
-   // /* 08 */{.tile=20, .permission=1},
-   // /* 09 */{.tile=21, .permission=1},
-
-    
     /* 00 */{.tile=1, .permission=0},
     /* 01 */{.tile=13, .permission=0},
     /* 02 */{.tile=14, .permission=0},
-    /* 03 */{.tile=28, .permission=0},
-    /* 04 */{.tile=36, .permission=0},
+    /* 03 */{.tile=28, .permission=1},
+    /* 04 */{.tile=36, .permission=1},
     /* 05 */{.tile=15, .permission=0},
-    /* 06 */{.tile=29, .permission=0},
-    /* 07 */{.tile=37, .permission=0},
-    /* 08 */{.tile=20, .permission=0},
-    /* 09 */{.tile=21, .permission=0},
+    /* 06 */{.tile=29, .permission=1},
+    /* 07 */{.tile=37, .permission=1},
+    /* 08 */{.tile=20, .permission=1},
+    /* 09 */{.tile=21, .permission=1},
+
+    
+    ///* 00 */{.tile=1, .permission=0},
+    ///* 01 */{.tile=13, .permission=0},
+    ///* 02 */{.tile=14, .permission=0},
+    ///* 03 */{.tile=28, .permission=0},
+    ///* 04 */{.tile=36, .permission=0},
+    ///* 05 */{.tile=15, .permission=0},
+    ///* 06 */{.tile=29, .permission=0},
+    ///* 07 */{.tile=37, .permission=0},
+    ///* 08 */{.tile=20, .permission=0},
+    ///* 09 */{.tile=21, .permission=0},
 };
 
 u32 tileset_allow_all_tiles = (1 << sizeof(tileset) / sizeof(struct TileRule)) - 1;
+
+u32 tileset_walkable_superpos     = 0b0000100111; //tiles 0, 1, 2, and 5
+u32 tileset_non_walkable_superpos = 0b1111011000; //!tiles 0, 1, 2, and 5
 
 u32 sum_left_rules_for_tileids (u32 superpos);
 u32 sum_right_rules_for_tileids(u32 superpos);
