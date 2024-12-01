@@ -34,15 +34,15 @@ void paint(struct Brush brush, struct Wfc wfc, s8 x, s8 y){
     for(u8 i=softStartX; i<=softEndX; i++){
         for(u8 j=softStartY; j<=softEndY; j++){
             //dprintf("painting soft %x %x\n", j, i);
-            matrix[j + i  *matrixW] |= brush.superposition;
+            matrix[i + j  *matrixW] |= brush.superposition;
             //setSemiPaintedCoords(new Coord(i, j))
         }
     }
 
     for(u8 i=startX; i<=endX; i++){
         for(u8 j=startY; j<=endY; j++){
-            //dprintf("painting %x %x\n", j, i);
-            matrix[j + i * matrixW] = brush.superposition;
+            //dprintf("painting %x %x\n", i, j);
+            matrix[i + j * matrixW] = brush.superposition;
             //((u32 *)matrix[i])[j] = brush.superposition;
             //setPaintedCoords(new Coord(i, j))
         }
