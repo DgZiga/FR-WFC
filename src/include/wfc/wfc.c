@@ -29,9 +29,15 @@ bool is_output_empty(struct MapTile output){
 }
 
 void print(struct Wfc wfc){
+    for(u8 j=0; j<wfc.height; j++){
+        if(j==0){dprintf("\t");}
+        dprintf("%x\t", j);
+    }
+    dprintf("\n");
     for(u8 i=0; i<wfc.width; i++){
+        dprintf("%x\t",i);
         for(u8 j=0; j<wfc.height; j++){
-            dprintf("%x  ", get_probs(wfc, j, i));
+            dprintf("%x\t", get_probs(wfc, j, i));
         }
         dprintf("\n");
     }
@@ -53,7 +59,7 @@ struct Wfc init(u8 width, u8 height){
     u32 *wfcProbsPtr = (u32 *) ((u8 *)wfcDataPtr+outputSize);
     void *wfcProbsCalcCtrPtr = ((u8 *)wfcProbsPtr)+probsSize;
 
-    dprintf("out: %x, probs: %x, calcPtr: %x\n", wfcOuputPtr, wfcProbsPtr, wfcProbsCalcCtrPtr);
+    //dprintf("out: %x, probs: %x, calcPtr: %x\n", wfcOuputPtr, wfcProbsPtr, wfcProbsCalcCtrPtr);
 
     memset(wfcOuputPtr, 0xFF, outputSize);
     for(u8 i=0; i<width; i++){
@@ -94,11 +100,11 @@ struct Position {
 
 void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
     // Stack for positions to process
-    u8 pad = 10;
+    u8 pad = 30;
     struct Position *stack = (struct Position *)malloc((wfc.width+pad) * (wfc.height+pad) * sizeof(struct Position));
     if (!stack) {
         // Memory allocation failed
-        dprintf("porcodio la madonna è negra");
+        //dprintf("malloc failed");
         return;
     }
     int top = -1; // Stack pointer
@@ -150,7 +156,7 @@ void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y) {
         probs &= l_allowed_tiles & r_allowed_tiles & u_allowed_tiles & d_allowed_tiles;
 
         if (probs == 0) {
-            dprintf("Se sei felice tu lo vuoi batti le mali %x %x \n", x, y);
+            dprintf("contraddiction about to happen at %x %x \n", x, y);
             print(wfc);
             // Handle collision
             // e.g., debug or log the error

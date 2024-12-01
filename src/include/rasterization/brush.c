@@ -4,18 +4,18 @@
 
 #include "brush.h"
 
-void paint(struct Brush brush, struct Wfc wfc, u8 x, u8 y){
+void paint(struct Brush brush, struct Wfc wfc, s8 x, s8 y){
     //dprintf("painting %x %x\n", x, y);
-    u8 matrixW = wfc.width;
-    u8 matrixH = wfc.height;
+    s8 matrixW = wfc.width;
+    s8 matrixH = wfc.height;
 
     u32 *matrix = wfc.probs;
     //draw a square
-    u8 extraWidth = brush.width-1;
-    u8 startX = x-extraWidth;
-    u8 startY = y-extraWidth;
-    u8 endX = x+extraWidth;
-    u8 endY = y+extraWidth;
+    s8 extraWidth = brush.width-1;
+    s8 startX = x-extraWidth;
+    s8 startY = y-extraWidth;
+    s8 endX = x+extraWidth;
+    s8 endY = y+extraWidth;
 
     if(startX<0){startX = 0;}
     if(startY<0){startY = 0;}
@@ -23,10 +23,10 @@ void paint(struct Brush brush, struct Wfc wfc, u8 x, u8 y){
     if(endY>=matrixH){endY = matrixH-1;}
 
     //Softness
-    u8 softStartX = startX - brush.softness;
-    u8 softStartY = startY - brush.softness;
-    u8 softEndX   = endX   + brush.softness;
-    u8 softEndY   = endY   + brush.softness;
+    s8 softStartX = startX - brush.softness;
+    s8 softStartY = startY - brush.softness;
+    s8 softEndX   = endX   + brush.softness;
+    s8 softEndY   = endY   + brush.softness;
     if(softStartX<0       ){softStartX = 0;}
     if(softStartY<0       ){softStartY = 0;}
     if(softEndX  >=matrixW){softEndX   = matrixW-1;}

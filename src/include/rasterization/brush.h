@@ -12,6 +12,6 @@ struct Brush{
     u8 softness;
 };
 
-void paint(struct Brush brush, struct Wfc wfc, u8 x, u8 y);
+void paint(struct Brush brush, struct Wfc wfc, s8 x, s8 y);
 
 #endif

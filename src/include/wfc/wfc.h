@@ -20,5 +20,6 @@ struct Wfc{
 struct Wfc init(u8 width, u8 height);
 u8 start(struct Wfc wfc);
 void recalc_prob_iterative(struct Wfc wfc, u8 start_x, u8 start_y);
+void print(struct Wfc wfc);
 
 #endif

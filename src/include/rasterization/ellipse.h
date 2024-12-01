@@ -11,6 +11,6 @@ struct Ellipse{
     u8 vRad;
 };
 
-void rasterizeEllipse(struct Ellipse v, u32 *matrix, struct Brush brush);
+void rasterizeEllipse(struct Ellipse v, struct Wfc wfc, struct Brush brush);
 
 #endif
