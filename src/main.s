@@ -34,4 +34,8 @@ back_to_normal:
 goto_r6:
     BX r6
 
+sqrt:
+    SWI 0x8
+    BX LR
+
 .pool
