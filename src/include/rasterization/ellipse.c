@@ -4,43 +4,44 @@
 
 #include "ellipse.h"
 
-u32 pow(u8 base, u8 exponent){
+u32 pow(u32 base, u32 exponent){
+    if(base == 0){ return 0; }
     u32 res = 1;
-    for(u8 i=0; i<exponent; i++){
+    for(u32 i=0; i<exponent; i++){
         res *= base;
     }
-    //dprintf("%d^%d=%d\n",base, exponent, res);
     return res;
 }
 
 #define ABS_DIFF(a, b) (a > b) ? (a - b) : (b - a)
 POKEAGB_EXTERN u16 sqrt(u16 in);
 
+
 void rasterizeEllipse(struct Ellipse e, struct Wfc wfc, struct Brush brush){
     u8 matrixW = wfc.width;
     u8 matrixH = wfc.height;
 
-    // ChatGPT approximation for ellipse fill
-    u8 h = e.centerX * matrixW / 100;
-    u8 k = e.centerY * matrixH / 100;
-    u8 a = e.hRad    * matrixW / 100;
-    u8 b = e.vRad    * matrixH / 100;
-    dprintf("%x %x %x %x\n", h, k, a, b);
-    // Iterate over all rows (y-values) in the bounding box of the ellipse
-    for (u8 y = k - b; y <= k + b; y++) {
-        if (y < 0 || y >= matrixH) continue; // Skip rows outside the grid
-        // Compute the x-range for this row
-        u32 yOffset = pow(ABS_DIFF(y,k), 2) / pow(b, 2);
-        if (yOffset > 1) continue; // Outside the ellipse
-        u32 xRange = sqrt(pow(ABS_DIFF(1, yOffset) * a, 2));
-        u32 xMin = MAX(0, ABS_DIFF(h, xRange));
-        u32 xMax = MIN(ABS_DIFF(matrixW, 1), h + xRange);
-
-        // Fill all cells between xMin and xMax
-        for (u32 x = xMin; x <= xMax; x++) {
-            paint(brush, wfc, x, y);
+    for(s32 x = -1*e.hRad; x<=e.hRad; x++){
+        /*typical ellipse equation for y is y = +-vRad * sqrt(1 - (x^2)/(hRad^2))
+        in other words, we multiply the vRad by the absolute, inverse proportion of x over hRad so that the y range is larger (up to vRad) in the center and then tapers of to 0. 
+        typical approach:
+        s32 y1 = e.vRad * sqrt(1 - pow(x,2) / pow(e.hRad,2));
+        s32 y2 = -1 * y1;
+        this doesn't work because GBA can't handle floats and the coefficient will always be either 0 or 1.
+        To get around this we introduce a constant C that x is mutliplied by before the division with hRad, we then get yC, which divied by C gets us back y.
+        */
+        s32 C = 256;
+        s32 ySquared = pow(e.vRad,2) * (C - C*pow(x,2) / pow(e.hRad, 2)) / C;
+        s32 y1 = sqrt(ySquared);
+        s32 y2 = -1 * y1;
+        for(s32 y = MIN(y1,y2);  y <= MAX(y1,y2); y++){
+            s8 mx = (x+e.centerX)*matrixW/100;
+            s8 my = (y+e.centerY)*matrixH/100;
+            paint(brush, wfc, mx, my);
         }
     }
+
+    return;
 
 }
 

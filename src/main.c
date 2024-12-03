@@ -12,8 +12,8 @@ u8 randUpTo(u8 max){
 
 void wfc_entrypoint(struct MapHeader *mapHeader){
     
-    struct Wfc wfc = init(30, 30);
-    struct Brush b = {.superposition= tileset_walkable_superpos, .width= 2, .softness=2};
+    struct Wfc wfc = init(40, 40);
+    struct Brush b = {.superposition= tileset_walkable_superpos, .width= 1, .softness=2};
 
     dprintf("Starting rasterization\n");
 
@@ -23,8 +23,8 @@ void wfc_entrypoint(struct MapHeader *mapHeader){
     for(u8 i=0; i<ROOMS_NO; i++){
         u8 x = randUpTo(100);
         u8 y = randUpTo(100);
-        //dprintf("generated random coords %d %d\n", x, y);
-        struct Ellipse e = {.centerX=x, .centerY=y, .hRad=30, .vRad=30};
+        //dprintf("generated random coords %d %d (%x %x)\n", x, y, x*wfc.width/100, y*wfc.height/100);
+        struct Ellipse e = {.centerX=x, .centerY=y, .hRad=randUpTo(10)+10, .vRad=randUpTo(10)+10};
         rasterizeEllipse(e, wfc, b);
         struct Coords8 c = {.x=x, .y=y};
         ellipseCenters[i] = c;
